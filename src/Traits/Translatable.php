@@ -68,7 +68,7 @@ trait Translatable
     public function getTranslatedAttributeMeta(string $attribute, ?string $locale = null, bool|string $fallback = true): array
     {
         if (!in_array($attribute, $this->getTranslatableAttributes())) {
-            return [$this->getAttributeValue($attribute), config('app.locale'), false];
+            return [parent::getAttributeValue($attribute), config('app.locale'), false];
         }
 
         $locale  = $locale ?? app()->getLocale();
@@ -79,7 +79,7 @@ trait Translatable
 
         // Default locale → return column value directly (no join needed)
         if ($locale === $default) {
-            return [$this->getAttributeValue($attribute), $default, true];
+            return [parent::getAttributeValue($attribute), $default, true];
         }
 
         // Load translations if not already loaded
@@ -105,7 +105,7 @@ trait Translatable
         }
 
         // Return default column value
-        return [$this->getAttributeValue($attribute), $default, false];
+        return [parent::getAttributeValue($attribute), $default, false];
     }
 
     /**
@@ -161,14 +161,16 @@ trait Translatable
     }
 
     /**
-     * Override getAttribute to handle translations.
+     * Override getAttributeValue.
+     * Called internally by Eloquent after getAttribute().
+     * No type hint to avoid signature conflicts across Laravel versions.
      */
-    public function getAttribute(string $key): mixed
+    public function getAttributeValue($key): mixed
     {
         if ($this->exists && in_array($key, $this->getTranslatableAttributes())) {
             return $this->getTranslatedAttribute($key);
         }
 
-        return parent::getAttribute($key);
+        return parent::getAttributeValue($key);
     }
 }
