@@ -161,18 +161,6 @@ trait Translatable
     }
 
     /**
-     * Magic getter — returns translated value automatically.
-     */
-    public function __get(string $key): mixed
-    {
-        if (in_array($key, $this->getTranslatableAttributes())) {
-            return $this->getTranslatedAttribute($key);
-        }
-
-        return parent::__get($key);
-    }
-
-    /**
      * Override getAttribute to handle translations.
      */
     public function getAttribute(string $key): mixed
