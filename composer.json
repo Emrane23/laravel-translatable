@@ -1,0 +1,53 @@
+{
+    "name": "emrane23/laravel-translatable",
+    "description": "A simple, elegant and powerful translation package for Laravel",
+    "keywords": [
+        "laravel",
+        "translatable",
+        "translation",
+        "i18n",
+        "localization"
+    ],
+    "homepage": "https://github.com/Emrane23/laravel-translatable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Emrane Klaai",
+            "homepage": "https://github.com/Emrane23",
+            "email": "omranklaai@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/database": "^10.0|^11.0",
+        "illuminate/support": "^10.0|^11.0",
+        "illuminate/http": "^10.0|^11.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0|^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Emrane23\\Translatable\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Emrane23\\Translatable\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Emrane23\\Translatable\\TranslatableServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
