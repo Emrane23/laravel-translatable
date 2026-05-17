@@ -67,19 +67,20 @@ trait Translatable
      */
     public function getTranslatedAttributeMeta(string $attribute, ?string $locale = null, bool|string $fallback = true): array
     {
+        $default = config('translatable.default_locale', config('app.locale', 'en'));
+
         if (!in_array($attribute, $this->getTranslatableAttributes())) {
-            return [parent::getAttributeValue($attribute), config('app.locale'), false];
+            return [parent::getAttributeValue($attribute), $default, false];
         }
 
-        $locale  = $locale ?? app()->getLocale();
-        $default = config('translatable.default_locale', config('app.fallback_locale', 'en'));
+        $locale   = $locale ?? app()->getLocale();
         $fallback = $fallback === true
             ? config('translatable.fallback_locale', config('app.fallback_locale', 'en'))
             : $fallback;
 
         // Default locale → return column value directly (no join needed)
         if ($locale === $default) {
-            return [parent::getAttributeValue($attribute), $default, true];
+            return [parent::getAttributeValue($attribute), $locale, true];
         }
 
         // Load translations if not already loaded
@@ -114,7 +115,7 @@ trait Translatable
     public function setAttributeTranslations(string $attribute, array $translations, bool $save = false): array
     {
         $responses = [];
-        $default   = config('translatable.default_locale', config('app.fallback_locale', 'en'));
+        $default   = config('translatable.default_locale', config('app.locale', 'en'));
 
         foreach ($translations as $locale => $value) {
             if ($locale === $default) {

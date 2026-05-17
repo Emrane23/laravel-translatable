@@ -1,6 +1,7 @@
 <?php
 
 return [
+
     /*
     |--------------------------------------------------------------------------
     | Default Locale
@@ -31,8 +32,31 @@ return [
     |--------------------------------------------------------------------------
     |
     | List of locales accepted by the TranslationMiddleware.
-    | Requests with X-Locale headers outside this list are ignored.
+    | Requests with a locale outside this list are ignored
+    | and fall back to the default locale.
     |
     */
     'supported_locales' => ['fr', 'en'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Locale Source
+    |--------------------------------------------------------------------------
+    |
+    | Define how the middleware detects the current locale.
+    | Pick the one that matches your project architecture.
+    |
+    | Available values:
+    |   'header'  → X-Locale request header          (SPA / API / mobile)
+    |   'query'   → ?locale= URL parameter            (direct URLs, emails)
+    |   'session' → session()->get('locale')          (classic monolith)
+    |   'cookie'  → cookie('locale')                  (persistent preference)
+    |   'user'    → auth()->user()->preferredLocale() (per-user preference)
+    |              or auth()->user()->locale if preferredLocale() not defined
+    |
+    | An InvalidArgumentException is thrown if an invalid value is provided.
+    |
+    */
+    'locale_source' => 'header',
+
 ];

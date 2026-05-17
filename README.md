@@ -1,6 +1,6 @@
 # laravel-translatable
 
-**Zero-config translations for Laravel SPAs — by Emrane Klaai**
+**Zero-config translations for Laravel — SPA, monolith, and everything in between.**
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/emrane23/laravel-translatable.svg?style=flat-square)](https://packagist.org/packages/emrane23/laravel-translatable)
 [![Total Downloads](https://img.shields.io/packagist/dt/emrane23/laravel-translatable.svg?style=flat-square)](https://packagist.org/packages/emrane23/laravel-translatable)
@@ -17,7 +17,20 @@ This package takes a different approach:
 - **Other languages** live in a separate `translations` table — clean and scalable
 - **Automatic fallback** — if a translation is missing, returns the default language value
 - **Magic getter** — just call `$model->name`, it returns the right language automatically
-- **Zero code change** in your controllers or views — built for SPAs from day one
+- **Zero code change** in your controllers or views
+
+---
+
+## Hybrid Laravel Support
+
+This package works seamlessly across all Laravel architectures:
+
+- SPA applications (Vue.js / React / Inertia.js)
+- Classic Laravel monoliths (Blade + sessions)
+- API-first architectures (mobile apps)
+- Hybrid systems (mixed environments)
+
+The middleware locale source is fully configurable — you pick the detection mechanism that fits your project.
 
 ---
 
@@ -58,6 +71,9 @@ return [
     'default_locale'    => env('APP_LOCALE', 'fr'),
     'fallback_locale'   => env('APP_FALLBACK_LOCALE', 'en'),
     'supported_locales' => ['fr', 'en', 'ar', 'es'],
+
+    // Pick the one that matches your project — see Middleware section below
+    'locale_source' => 'header',
 ];
 ```
 
@@ -100,11 +116,12 @@ No controller changes. No view changes. It just works.
 
 ---
 
-## Middleware — Auto-detect locale from your SPA
+## Middleware — Locale Detection
 
-The `TranslationMiddleware` reads the `X-Locale` header and sets the application locale automatically. Carbon dates, validation messages, and error responses all follow.
+The `TranslationMiddleware` detects the current locale automatically from the source you configure.
+An `InvalidArgumentException` is thrown if an invalid source value is provided.
 
-**Laravel 11, 12, 13 — `bootstrap/app.php`**
+### Laravel 11, 12, 13 — `bootstrap/app.php`
 
 ```php
 use Emrane23\Translatable\Middleware\TranslationMiddleware;
@@ -114,7 +131,7 @@ use Emrane23\Translatable\Middleware\TranslationMiddleware;
 })
 ```
 
-**Laravel 10 — `app/Http/Kernel.php`**
+### Laravel 10 — `app/Http/Kernel.php`
 
 ```php
 use Emrane23\Translatable\Middleware\TranslationMiddleware;
@@ -126,13 +143,57 @@ protected $middlewareGroups = [
 ];
 ```
 
-**Frontend (Vue.js / React / any SPA)**
+### Available sources
+
+| Value | How it works | Best for |
+|---|---|---|
+| `header` | Reads `X-Locale` request header | SPA, API, mobile |
+| `query` | Reads `?locale=` URL parameter | Direct URLs, emails |
+| `session` | Reads `session()->get('locale')` | Classic monolith |
+| `cookie` | Reads `cookie('locale')` | Persistent preference |
+| `user` | Reads from authenticated user | Per-user preference |
+
+### Configure for your architecture
+
+```php
+// config/translatable.php
+
+'locale_source' => 'header',   // SPA / API
+'locale_source' => 'session',  // Classic monolith
+'locale_source' => 'cookie',   // Persistent preference
+'locale_source' => 'query',    // URL parameter
+'locale_source' => 'user',     // Per-user preference
+```
+
+### Frontend (Vue.js / React / any SPA)
 
 ```javascript
 axios.defaults.headers.common['X-Locale'] = 'ar';
 ```
 
-From this point, every `$model->name` call returns the Arabic translation automatically.
+### User locale — `preferredLocale()`
+
+The `user` source uses `preferredLocale()` if available (Laravel's `HasLocalePreference` interface),
+then falls back to a direct `locale` attribute. You can adapt it to your own mechanism:
+
+```php
+// Option 1 — HasLocalePreference (recommended)
+use Illuminate\Contracts\Translation\HasLocalePreference;
+
+class User extends Authenticatable implements HasLocalePreference
+{
+    public function preferredLocale(): string
+    {
+        return $this->locale ?? config('app.locale');
+    }
+}
+
+// Option 2 — Custom attribute (adapt to your own mechanism)
+public function getLocaleAttribute(): string
+{
+    return $this->settings['language'] ?? config('app.locale');
+}
+```
 
 ---
 
@@ -191,14 +252,15 @@ $product->setAttributeTranslations('name', ['en' => 'Laptop'], save: true);
 ### Eager loading (avoid N+1)
 
 ```php
-Product::withTranslation()->get();          // current locale + fallback
-Product::withTranslation('en')->get();      // specific locale
+Product::withTranslation()->get();            // current locale + fallback
+Product::withTranslation('en')->get();        // specific locale
 Product::withTranslation('en', false)->get(); // no fallback
 ```
 
-For large applications, you can also eager load translations globally in your model:
+For large applications with heavy traffic, eager load translations globally:
 
 ```php
+// In your model
 protected $with = ['translations'];
 ```
 
@@ -296,7 +358,9 @@ TranslationSeeder::flush($translations); // single query for everything
                              └──────────────────────────────────────┘
 ```
 
-The default language is stored directly in the model column — no joins needed for the most common case. Other languages are fetched only when requested. One `translations` table serves all models with no extra migrations.
+The default language is stored directly in the model column — no joins needed for the most common case.
+Other languages are fetched only when requested. One `translations` table serves all your models
+with no extra migrations needed.
 
 Fallback chain: `requested locale → fallback locale → default column`
 
