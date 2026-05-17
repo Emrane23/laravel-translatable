@@ -63,6 +63,29 @@ trait Translatable
     }
 
     /**
+     * Override toArray to include translations and hide internal relation.
+     * Called by toJson() and response()->json().
+     */
+    public function toArray(): array
+    {
+        $wasLoaded = $this->relationLoaded('translations');
+
+        if (!$wasLoaded) {
+            $this->unsetRelation('translations');
+        }
+
+        $result = parent::toArray();
+
+        foreach ($this->getTranslatableAttributes() as $key) {
+            if (array_key_exists($key, $result)) {
+                $result[$key] = $this->getTranslatedAttribute($key);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Get translated attribute with full metadata [value, locale, found].
      */
     public function getTranslatedAttributeMeta(string $attribute, ?string $locale = null, bool|string $fallback = true): array
